@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     string fused_params_offsets_file = weights_dir + "fused_params_offsets.txt";
 
     Settings_struct settings;
-    read_settings("settings.cfg", settings);
+    read_settings("benchmarking_settings.cfg", settings);
 
     read_fusions_list(settings.fusion_file, layers_fusions);
 
