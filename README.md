@@ -1,8 +1,8 @@
-# Fusing_DW_and_PW_for_Inference_on_GPUs
+# Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs
 
 Instructions will be added soon!
 
-This is the implementation of the paper [Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs]
+This is the implementation of the paper [Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs](https://arxiv.org/pdf/2404.19331)
 
 If you find this repository useful for your research, please use the following bibtex to cite us,
 
