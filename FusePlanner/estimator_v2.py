@@ -144,8 +144,8 @@ def dw_estimate_min_dm_v2(layer_specs, hw_configs):
         
         if current_gma < min_gma:
             min_gma = current_gma
-            splitting_and_fusion_info.l1_tile_h = ifms_tile_h / strides
-            splitting_and_fusion_info.l1_tile_w = ifms_tile_w / strides
+            splitting_and_fusion_info.l1_tile_h = int(ifms_tile_h / strides)
+            splitting_and_fusion_info.l1_tile_w = int(ifms_tile_w / strides)
             splitting_and_fusion_info.l1_tile_filters = 1
             splitting_and_fusion_info.total_dm = current_gma
             
@@ -227,8 +227,8 @@ def pw_estimate_min_dm_v2(layer_specs, hw_configs):
             #print(ifms_h, ifms_tile_h, ifms_tile_w, weights_tile_size, ifms_tile_size, ofms_tile_size, current_gma)
             if current_gma < min_gma:
                 min_gma = current_gma
-                splitting_and_fusion_info.l1_tile_h = ifms_tile_h / strides
-                splitting_and_fusion_info.l1_tile_w = ifms_tile_w / strides
+                splitting_and_fusion_info.l1_tile_h = int(ifms_tile_h / strides)
+                splitting_and_fusion_info.l1_tile_w = int(ifms_tile_w / strides)
                 splitting_and_fusion_info.l1_tile_filters = num_of_filters_in_a_tile
                 splitting_and_fusion_info.total_dm = current_gma
                 

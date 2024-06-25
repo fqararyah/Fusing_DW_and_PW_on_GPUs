@@ -112,14 +112,13 @@ def build_cnn(model_dag, hw_configs):
     fused_layers = {}
     for layer_0, layer_1 in pwdw_fusion_dict.items():
         if layer_1 != None:
-            print(layer_0, layer_1)
+            print('layers:', layer_0, layer_1)
             pwdw_fusion_dict_rev[layer_1] = layer_0
+            fused_layers[layer_0] = 1
+            fused_layers[layer_1] = 1
             fused_pw_dw_layer_dms_rev[layer_1] = fused_pw_dw_layer_dms[layer_0]
             print('tile dims:', fused_pw_dw_layer_dms[layer_0].l1_tile_filters,
                    fused_pw_dw_layer_dms[layer_0].l1_tile_h, fused_pw_dw_layer_dms[layer_0].l1_tile_w)
-            print('recomp', fused_pw_dw_layer_dms[layer_0].redundant_comp)
-        # else:
-        #     print('DNE')
     ###################################dwpw##########################################
     fused_dw_pw_layer_dms = {}
     fused_dw_pw_layer_dms_rev = {}
@@ -131,8 +130,10 @@ def build_cnn(model_dag, hw_configs):
     print('**********dwpw***********')
     for layer_0, layer_1 in dwpw_fusion_dict.items():
         if layer_1 != None:
-            print(layer_0, layer_1)
+            print('layers:', layer_0, layer_1)
             dwpw_fusion_dict_rev[layer_1] = layer_0
+            fused_layers[layer_0] = 1
+            fused_layers[layer_1] = 1
             fused_dw_pw_layer_dms_rev[layer_1] = fused_dw_pw_layer_dms[layer_0]
             print('tile dims:', fused_dw_pw_layer_dms[layer_0].l1_tile_filters, 
                   fused_dw_pw_layer_dms[layer_0].l1_tile_h, fused_dw_pw_layer_dms[layer_0].l1_tile_w)
@@ -147,12 +148,19 @@ def build_cnn(model_dag, hw_configs):
     print('**********pwpw***********')
     for layer_0, layer_1 in pwpw_fusion_dict.items():
         if layer_1 != None:
-            print(layer_0, layer_1)
+            print('layers:', layer_0, layer_1)
             pwpw_fusion_dict_rev[layer_1] = layer_0
+            fused_layers[layer_0] = 1
+            fused_layers[layer_1] = 1
             fused_pw_pw_layer_dms_rev[layer_1] = fused_pw_pw_layer_dms[layer_0]
             print('tile dims:', fused_pw_pw_layer_dms[layer_0].l1_tile_filters, 
                   fused_pw_pw_layer_dms[layer_0].l1_tile_h, fused_pw_pw_layer_dms[layer_0].l1_tile_w)
-
+    print('********not fused********')
+    for layer_index in range(len(layer_by_layer_dms)):
+        if layer_index not in fused_layers and layer_by_layer_dms[layer_index] is not None and layer_by_layer_dms[layer_index] != -1:
+            print('Layer:', layer_index)
+            print('tile dims:', layer_by_layer_dms[layer_index].l1_tile_filters, 
+                  layer_by_layer_dms[layer_index].l1_tile_h, layer_by_layer_dms[layer_index].l1_tile_w)
     print('**************************')
 
 
