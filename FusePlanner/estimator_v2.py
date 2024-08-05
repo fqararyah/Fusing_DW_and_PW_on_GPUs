@@ -71,12 +71,13 @@ def pw_pw_gma(ifms_size, ofms_size, pw_1_weights_size, pw_2_weights_size,
                 (pw_1_weights_size * num_of_pw_2_weights_tiles + pw_2_weights_size) * (num_of_ifm_tiles_h * num_of_ifm_tiles_w)
 
 def is_viable_tile(ifms_h, ifms_w, ifms_tile_h, ifms_tile_w, num_of_tiles,\
-            weights_tile_size, ifms_tile_size, ofms_tile_size, num_of_sms, l1_sz):
+            weights_tile_size, ifms_tile_size, ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
     
     return ifms_tile_h > 0 and ifms_tile_w > 0 and \
           ifms_tile_h <= builder_utils.least_pow_of_2_geq(ifms_h) and ifms_tile_w <= builder_utils.least_pow_of_2_geq(ifms_w) and \
             num_of_tiles >= num_of_sms and \
-            weights_tile_size + ifms_tile_size + ofms_tile_size <= l1_sz
+            weights_tile_size + ifms_tile_size <= shmem_sz and \
+                weights_tile_size + ifms_tile_size + ofms_tile_size <= l1_sz
             
 def dw_estimate_min_dm_v2(layer_specs, hw_configs):
     splitting_and_fusion_info = tiling_and_dm_info.Splitting_and_fusion_info()
@@ -92,9 +93,7 @@ def dw_estimate_min_dm_v2(layer_specs, hw_configs):
     ofms_size = ofms_d * ofms_h * ofms_w
     num_of_sms = int(hw_configs['sms'])
     l1_sz = int(hw_configs['l1']) * 1024
-    
-    num_of_sms = int(hw_configs['sms'])
-    l1_sz = int(hw_configs['l1']) * 1024
+    shmem_sz = int(hw_configs['shmem']) * 1024
 
     num_of_weights_tile_hw = 1 #OS dataflow requirements, may add other options in the future
     weights_tile_size = filter_dim * filter_dim
@@ -125,7 +124,7 @@ def dw_estimate_min_dm_v2(layer_specs, hw_configs):
     splitting_and_fusion_info.total_dm =gma
     
     while is_viable_tile(ifms_h, ifms_w, ifms_tile_h, ifms_tile_w, num_of_ifms_tile_hw * ifms_d,
-                         weights_tile_size, ifms_tile_size, ofms_tile_size, num_of_sms, l1_sz):
+                         weights_tile_size, ifms_tile_size, ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
         
         if iter % 2 == 0:
             ifms_tile_h, ifms_tile_w, num_of_ifm_tiles_h, num_of_ifm_tiles_w, overlap = \
@@ -168,6 +167,7 @@ def pw_estimate_min_dm_v2(layer_specs, hw_configs):
     
     num_of_sms = int(hw_configs['sms'])
     l1_sz = int(hw_configs['l1']) * 1024
+    shmem_sz = int(hw_configs['shmem']) * 1024
     
     min_gma = 1000000000000
     splitting_and_fusion_info.total_dm = min_gma
@@ -193,7 +193,7 @@ def pw_estimate_min_dm_v2(layer_specs, hw_configs):
         num_of_all_tiles = num_of_ifms_tile_hw * num_of_weights_tiles
         
         if is_viable_tile(ifms_h, ifms_w, ifms_tile_h, ifms_tile_w, num_of_all_tiles,
-                            weights_tile_size, ifms_tile_size, ofms_tile_size, num_of_sms, l1_sz):   
+                            weights_tile_size, ifms_tile_size, ofms_tile_size, num_of_sms, l1_sz, shmem_sz):   
             current_gma = pw_gma(ifms_size, ofms_size, weights_size, num_of_weights_tiles,
                         num_of_ifm_tiles_h, num_of_ifm_tiles_w)
                 
@@ -206,7 +206,7 @@ def pw_estimate_min_dm_v2(layer_specs, hw_configs):
                 splitting_and_fusion_info.total_dm = current_gma
         
         while is_viable_tile(ifms_h, ifms_w, ifms_tile_h, ifms_tile_w, num_of_all_tiles,
-                            weights_tile_size, ifms_tile_size, ofms_tile_size, num_of_sms, l1_sz):
+                            weights_tile_size, ifms_tile_size, ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
             
             if iter % 2 == 0:
                 ifms_tile_h, ifms_tile_w, num_of_ifm_tiles_h, num_of_ifm_tiles_w, _ = \
@@ -258,6 +258,7 @@ def pw_dw_estimate_min_dm_v2(pw_layer_specs, dw_layer_specs, hw_configs):
     
     num_of_sms = int(hw_configs['sms'])
     l1_sz = int(hw_configs['l1']) * 1024
+    shmem_sz = int(hw_configs['shmem']) * 1024
     
     min_gma = 1000000000000
     splitting_and_fusion_info.fused_with = dw_layer_specs['id']
@@ -296,7 +297,7 @@ def pw_dw_estimate_min_dm_v2(pw_layer_specs, dw_layer_specs, hw_configs):
         
         if is_viable_tile(ifms_h, ifms_w, ifms_tile_h, ifms_tile_w, num_of_all_tiles,
                             pw_weights_tile_size + dw_weights_tile_size, ifms_tile_size + comm_tile_size,
-                            ofms_tile_size, num_of_sms, l1_sz):
+                            ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
             
             current_gma = pw_dw_gma(ifms_size, ofms_size, pw_weights_size, dw_weights_size, num_of_weights_tiles,
                             num_of_weights_tiles, overlap, num_of_ifm_tiles_h, num_of_ifm_tiles_w, pw_filter_d)
@@ -316,7 +317,7 @@ def pw_dw_estimate_min_dm_v2(pw_layer_specs, dw_layer_specs, hw_configs):
         iter = 0 
         while is_viable_tile(ifms_h, ifms_w, ifms_tile_h, ifms_tile_w, num_of_all_tiles,
                             pw_weights_tile_size + dw_weights_tile_size, ifms_tile_size + comm_tile_size,
-                            ofms_tile_size, num_of_sms, l1_sz):
+                            ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
             
             if iter % 2 == 0:
                 comm_tile_h, comm_tile_w, num_of_ifm_tiles_h, num_of_ifm_tiles_w, overlap = \
@@ -380,6 +381,7 @@ def dw_pw_estimate_min_dm_v2(dw_layer_specs, pw_layer_specs, hw_configs):
     
     num_of_sms = int(hw_configs['sms'])
     l1_sz = int(hw_configs['l1']) * 1024
+    shmem_sz = int(hw_configs['shmem']) * 1024
     
     min_gma = 1000000000000
     splitting_and_fusion_info.total_dm = min_gma
@@ -417,7 +419,7 @@ def dw_pw_estimate_min_dm_v2(dw_layer_specs, pw_layer_specs, hw_configs):
         
         if is_viable_tile(ifms_h, ifms_w, ifms_tile_h, ifms_tile_w, num_of_all_tiles,
                             pw_weights_tile_size + dw_weights_tile_size, ifms_tile_size + comm_tile_size,
-                            ofms_tile_size, num_of_sms, l1_sz):
+                            ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
             
             current_gma = dw_pw_gma(ifms_size, ofms_size, pw_weights_size, dw_weights_size, num_of_weights_tiles,
                             1, overlap, num_of_ifm_tiles_h, num_of_ifm_tiles_w, dw_ifms_d)
@@ -435,7 +437,7 @@ def dw_pw_estimate_min_dm_v2(dw_layer_specs, pw_layer_specs, hw_configs):
         iter = 0 
         while is_viable_tile(ifms_h, ifms_w, ifms_tile_h, ifms_tile_w, num_of_all_tiles,
                             pw_weights_tile_size + dw_weights_tile_size, ifms_tile_size + comm_tile_size,
-                            ofms_tile_size, num_of_sms, l1_sz):
+                            ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
             
             if iter % 2 == 0:
                 comm_tile_h, comm_tile_w, num_of_ifm_tiles_h, num_of_ifm_tiles_w, overlap = \
@@ -497,6 +499,7 @@ def pw_pw_estimate_min_dm_v2(pw_layer_1_specs, pw_layer_2_specs, hw_configs):
     
     num_of_sms = int(hw_configs['sms'])
     l1_sz = int(hw_configs['l1']) * 1024
+    shmem_sz = int(hw_configs['shmem']) * 1024
     
     min_gma = 1000000000000
     splitting_and_fusion_info.fused_with = pw_layer_2_specs['id']
@@ -532,7 +535,7 @@ def pw_pw_estimate_min_dm_v2(pw_layer_1_specs, pw_layer_2_specs, hw_configs):
         
         if is_viable_tile(ifms_h_1, ifms_w_1, ifms_tile_h, ifms_tile_w, num_of_all_tiles,
                             pw_2_weights_tile_size + pw_1_weights_tile_size, ifms_tile_size + comm_tile_size,
-                            ofms_tile_size, num_of_sms, l1_sz):
+                            ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
             
             current_gma = pw_pw_gma(ifms_size, ofms_size, pw_1_weights_size, pw_2_weights_size, 1, 
                                     num_of_weights_tiles, num_of_ifm_tiles_h, num_of_ifm_tiles_w)
@@ -549,7 +552,7 @@ def pw_pw_estimate_min_dm_v2(pw_layer_1_specs, pw_layer_2_specs, hw_configs):
         iter = 0 
         while is_viable_tile(ifms_h_1, ifms_w_1, ifms_tile_h, ifms_tile_w, num_of_all_tiles,
                             pw_2_weights_tile_size + pw_1_weights_tile_size, ifms_tile_size + comm_tile_size,
-                            ofms_tile_size, num_of_sms, l1_sz):
+                            ofms_tile_size, num_of_sms, l1_sz, shmem_sz):
             if iter % 2 == 0:
                 comm_tile_h, comm_tile_w, num_of_ifm_tiles_h, num_of_ifm_tiles_w, _ = \
                 adjust_tile_and_calculate_overlap(ifms_h_1, ifms_w_1, 1, ifms_tile_h,
