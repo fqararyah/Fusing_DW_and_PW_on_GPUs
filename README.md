@@ -1,14 +1,15 @@
 # Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs
 
-This repository contains an implementation of the paper [Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs](https://arxiv.org/pdf/2404.19331)
+This repository contains an implementation of the paper [Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs](https://doi.org/10.1145/3677333.3678153)
 
 If you find this repository useful for your research, please use the following bibtex to cite us,
 
 ```
-@article{qararyah2024fusing,
+@inproceedings{qararyah2024fusing,
   title={Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs},
   author={Qararyah, Fareed and Azhar, Muhammad Waqar and Maleki, Mohammad Ali and Trancoso, Pedro},
-  journal={arXiv preprint arXiv:2404.19331},
+  booktitle={Workshop Proceedings of the 53rd International Conference on Parallel Processing},
+  pages={58--67},
   year={2024}
 }
 ```
@@ -18,7 +19,7 @@ If you find this repository useful for your research, please use the following b
 Depthwise and pointwise convolutions have fewer parameters and perform fewer operations than standard convolutions. As a result, they have become increasingly used in various compact DNNs, including convolutional neural networks (CNNs) and vision transformers (ViTs). However, they have a lower compute-to-memory-access ratio than standard convolutions, making their memory accesses often the performance bottleneck.\\
 Fusing depthwise and pointwise convolutions helps in overcoming their memory access bottleneck. This repository contains fused implementations of depthwise and pointwise convolutions on GPUs. We refer to fused pairs of pointwise and depthwise convolutiona as _Fused Convolutional Modules (FCMs)_. FCMs significantly reduce pointwise and depthwise convolutions memory accesses, improving execution time and energy efficiency. 
 
-Nevertheless, fusion does not guarantee performance improvement in all cases. For more details please refer to the paper ([Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs](https://arxiv.org/pdf/2404.19331)). There is a need fo cost models to evaluate the trade-offs associated with fusion and determine which convolutions are beneficial to fuse and the optimal FCM parameters. _FusePlanner_ module in the repository contains implementations of such cost models. FusePlanner consists of cost models to estimate the memory accesses of depthwise, pointwise, and FCM kernels given GPU characteristics and suggest tiling parameters that are estimated to mainimize the global memory access.
+Nevertheless, fusion does not guarantee performance improvement in all cases. For more details please refer to the paper ([Fusing Depthwise and Pointwise Convolutions for Efficient Inference on GPUs](https://doi.org/10.1145/3677333.3678153)). There is a need fo cost models to evaluate the trade-offs associated with fusion and determine which convolutions are beneficial to fuse and the optimal FCM parameters. _FusePlanner_ module in the repository contains implementations of such cost models. FusePlanner consists of cost models to estimate the memory accesses of depthwise, pointwise, and FCM kernels given GPU characteristics and suggest tiling parameters that are estimated to mainimize the global memory access.
 
 ## How to use:
 
